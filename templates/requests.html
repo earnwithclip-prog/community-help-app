@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}All Requests — Volunteer View{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 slide-up">
+            <div>
+                <h1 class="fw-800 mb-1">
+                    <i class="bi bi-clipboard-data me-2"
+                        style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>All
+                    Help Requests
+                </h1>
+                <p class="text-muted mb-0">Volunteer View — Browse all community help requests</p>
+            </div>
+            <div class="badge bg-primary fs-6 px-3 py-2">
+                <i class="bi bi-collection me-1"></i>{{ requests|length }} Total
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        {% if requests|length > 0 %}
+        <div class="row g-3 mb-4 slide-up" style="animation-delay: 0.1s;">
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-total">
+                    <div class="stat-number">{{ requests|length }}</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-emergency">
+                    <div class="stat-number">{{ requests|selectattr('urgency', 'equalto', 'Emergency')|list|length }}
+                    </div>
+                    <div class="stat-label">Emergency</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-unsolved">
+                    <div class="stat-number">{{ requests|selectattr('solved_status', 'equalto', 'Unsolved')|list|length
+                        }}</div>
+                    <div class="stat-label">Unsolved</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-solved">
+                    <div class="stat-number">{{ requests|selectattr('solved_status', 'equalto', 'Solved')|list|length }}
+                    </div>
+                    <div class="stat-label">Solved</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if requests|length == 0 %}
+        <!-- Empty State -->
+        <div class="text-center py-5 fade-in">
+            <div class="empty-icon mb-3">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <h3 class="text-muted">No Requests Yet</h3>
+            <p class="text-muted">Be the first to submit a help request.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Submit Request
+            </a>
+        </div>
+        {% else %}
+        <!-- Requests Table -->
+        <div class="table-responsive slide-up" style="animation-delay: 0.15s;">
+            <table class="table table-custom" id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr class="request-row urgency-row-{{ req.urgency|lower }}">
+                        <td class="fw-bold">{{ req.id }}</td>
+                        <td>
+                            <div class="fw-600">{{ req.name }}</div>
+                        </td>
+                        <td><span class="text-nowrap">{{ req.phone }}</span></td>
+                        <td><span class="category-badge">{{ req.category }}</span></td>
+                        <td>
+                            <div class="description-cell" title="{{ req.description }}">
+                                {{ req.description[:80] }}{% if req.description|length > 80 %}...{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge urgency-badge-sm urgency-{{ req.urgency|lower }}">
+                                {% if req.urgency == 'Emergency' %}
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                {% elif req.urgency == 'Medium' %}
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                {% else %}
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                {% endif %}
+                                {{ req.urgency }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge status-badge status-{{ req.solved_status|lower }}">
+                                {% if req.solved_status == 'Solved' %}
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                {% else %}
+                                <i class="bi bi-clock-fill me-1"></i>
+                                {% endif %}
+                                {{ req.solved_status }}
+                            </span>
+                        </td>
+                        <td><span class="text-nowrap small">{{ req.created_at }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
