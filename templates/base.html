@@ -29,7 +29,7 @@
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="bi bi-people-fill me-2"></i>Community Help
             </a>
-            <nav class="d-flex gap-4">
+            <nav class="d-flex gap-3 align-items-center flex-wrap">
                 <a class="inline-flex items-center gap-x-2 text-sm whitespace-nowrap
                     {% if request.endpoint == 'index' %}fw-semibold text-primary{% else %}text-secondary{% endif %}"
                     href="{{ url_for('index') }}" {% if request.endpoint=='index' %}aria-current="page" {% endif %}>
@@ -42,10 +42,27 @@
                     <i class="bi bi-list-ul me-1"></i>View Requests
                 </a>
                 <a class="inline-flex items-center gap-x-2 text-sm whitespace-nowrap
-                    {% if request.endpoint == 'admin' %}fw-semibold text-primary{% else %}text-secondary{% endif %}"
+                    {% if request.endpoint in ['admin', 'admin_login'] %}fw-semibold text-primary{% else %}text-secondary{% endif %}"
                     href="{{ url_for('admin') }}" {% if request.endpoint=='admin' %}aria-current="page" {% endif %}>
                     <i class="bi bi-shield-lock me-1"></i>Admin Panel
                 </a>
+
+                <!-- Volunteer Section -->
+                {% if session.get('volunteer_email') %}
+                <span class="text-sm text-muted d-none d-md-inline">
+                    <i class="bi bi-person-check-fill me-1" style="color: #10B981;"></i>{{ session.get('volunteer_name',
+                    'Volunteer') }}
+                </span>
+                <a class="text-sm text-secondary" href="{{ url_for('volunteer_logout') }}" title="Volunteer Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                {% else %}
+                <a class="inline-flex items-center gap-x-2 text-sm whitespace-nowrap
+                    {% if request.endpoint == 'volunteer_register' %}fw-semibold text-primary{% else %}text-secondary{% endif %}"
+                    href="{{ url_for('volunteer_register') }}">
+                    <i class="bi bi-person-plus me-1"></i>Volunteer
+                </a>
+                {% endif %}
             </nav>
 
             <!-- Dark Mode Dropdown (Bootstrap) -->
@@ -140,7 +157,7 @@
     <footer class="footer">
         <div class="container text-center">
             <p class="mb-1">
-                <i class="bi bi-heart-fill text-danger me-1"></i>
+                <i class="bi bi-heart-fill me-1" style="color: #8B5CF6;"></i>
                 Community Help Request Management System
             </p>
             <p class="mb-0 small opacity-75">Connecting people who need help with community volunteers</p>

@@ -2,6 +2,64 @@
 {% block title %}All Requests — Volunteer View{% endblock %}
 
 {% block content %}
+<!-- Emergency Alert Banner for Volunteers -->
+{% if volunteer and emergency_alerts|length > 0 %}
+<div class="alert mb-4 slide-up"
+    style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.25); border-radius: 16px;">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h5 class="mb-2" style="color: #EF4444;">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>🚨 {{ emergency_alerts|length }} New Emergency
+                Alert{{ 's' if emergency_alerts|length > 1 else '' }}!
+            </h5>
+            <p class="mb-2 text-muted small">The following emergency requests need immediate attention:</p>
+            {% for alert in emergency_alerts %}
+            <div class="mb-2 p-2 rounded" style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid #EF4444;">
+                <strong style="color: var(--text-primary);">{{ alert.name }}</strong>
+                <span class="text-muted mx-1">·</span>
+                <span class="small" style="color: #EF4444;"><i class="bi bi-tag me-1"></i>{{ alert.category }}</span>
+                <span class="text-muted mx-1">·</span>
+                <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ alert.address[:50] }}{% if
+                    alert.address|length > 50 %}...{% endif %}</span>
+                <span class="text-muted mx-1">·</span>
+                <span class="small text-muted"><i class="bi bi-clock me-1"></i>{{ alert.created_at }}</span>
+                <br>
+                <span class="small" style="color: var(--text-secondary);">{{ alert.description[:100] }}{% if
+                    alert.description|length > 100 %}...{% endif %}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <form action="{{ url_for('dismiss_alerts') }}" method="POST" class="ms-3">
+            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Dismiss alerts"
+                style="border-radius: 9999px;">
+                <i class="bi bi-check2-all me-1"></i>Dismiss
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Volunteer Login Prompt (for non-logged-in visitors) -->
+{% if not volunteer and not session.get('volunteer_email') %}
+<div class="alert mb-4 slide-up"
+    style="background: var(--accent-soft); border: 1px solid var(--border-color-strong); border-radius: 16px;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <p class="mb-0 small">
+            <i class="bi bi-bell me-1" style="color: #8B5CF6;"></i>
+            <strong>Want emergency alerts?</strong> Register as a volunteer to get notified when new emergencies arrive.
+        </p>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('volunteer_login') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+            </a>
+            <a href="{{ url_for('volunteer_register') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus me-1"></i>Register
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-12">
         <!-- Header -->
@@ -9,7 +67,7 @@
             <div>
                 <h1 class="fw-800 mb-1">
                     <i class="bi bi-clipboard-data me-2"
-                        style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>All
+                        style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>All
                     Help Requests
                 </h1>
                 <p class="text-muted mb-0">Volunteer View — Browse all community help requests</p>

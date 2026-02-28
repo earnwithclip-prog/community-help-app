@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Volunteer Login — Community Help System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <!-- Header -->
+        <div class="text-center mb-4 slide-up">
+            <div class="hero-icon mb-3" style="background: linear-gradient(135deg, #10B981, #059669);">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+            <h1 class="fw-800 mb-2">Volunteer Login</h1>
+            <p class="lead">Sign in to view emergency alerts and help requests.</p>
+        </div>
+
+        <div class="card form-card slide-up" style="animation-delay: 0.1s;">
+            <div class="card-body p-4 p-md-5">
+                <form action="{{ url_for('volunteer_login') }}" method="POST" novalidate>
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-600">
+                            <i class="bi bi-envelope me-1"></i>Your Registered Email
+                        </label>
+                        <input type="email" class="form-control form-control-lg" id="email" name="email"
+                            placeholder="Enter your registered email" required>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-lg submit-btn"
+                            style="background: linear-gradient(135deg, #10B981, #059669); border: none; color: #fff; border-radius: 9999px; box-shadow: 0 6px 24px rgba(16, 185, 129, 0.25);">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="small text-muted mb-2">Not registered yet?</p>
+                    <a href="{{ url_for('volunteer_register') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person-plus me-1"></i>Register as Volunteer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
