@@ -8,3 +8,5 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: FAST2SMS_API_KEY
+        value: oWAlLwHKECsGB8z2dxuV50XR9f1rQgm64ai7UjIZYJcn3bOFNv0HhTtV3kMjNwYpeZbBDUdIfmA6gi25

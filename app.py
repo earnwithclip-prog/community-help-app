@@ -9,6 +9,7 @@ admin access control, and volunteer emergency alerts.
 
 import os
 import sqlite3
+import requests as http_requests
 from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect,
@@ -25,6 +26,10 @@ DATABASE = "community_help.db"
 # ──────────────────────────────────────────────
 
 ADMIN_ACCESS_CODE = "UNPAID"
+FAST2SMS_API_KEY = os.environ.get(
+    "FAST2SMS_API_KEY",
+    "oWAlLwHKECsGB8z2dxuV50XR9f1rQgm64ai7UjIZYJcn3bOFNv0HhTtV3kMjNwYpeZbBDUdIfmA6gi25"
+)
 
 
 def get_volunteer_by_email(email):
@@ -140,6 +145,64 @@ def predict_urgency(description: str) -> str:
 
 
 # ──────────────────────────────────────────────
+# SMS ALERT — Fast2SMS Integration
+# ──────────────────────────────────────────────
+
+def send_emergency_sms(requester_name, category, description, address, phone):
+    """
+    Send SMS alerts to ALL registered volunteers when
+    an emergency help request is submitted.
+    Uses Fast2SMS Quick SMS API.
+    """
+    try:
+        # Get all volunteer phone numbers
+        conn = get_db()
+        volunteers = conn.execute("SELECT phone FROM volunteers").fetchall()
+        conn.close()
+
+        if not volunteers:
+            print("[SMS] No volunteers registered — skipping SMS.")
+            return
+
+        # Collect all phone numbers (comma-separated)
+        phone_numbers = ",".join([v["phone"] for v in volunteers])
+
+        # Build short alert message (SMS limit ~160 chars)
+        short_desc = description[:60] + ("..." if len(description) > 60 else "")
+        message = (
+            f"EMERGENCY ALERT! {requester_name} needs help. "
+            f"{category}: {short_desc} "
+            f"Location: {address[:40]}. "
+            f"Call: {phone}"
+        )
+
+        # Send via Fast2SMS Quick SMS API
+        url = "https://www.fast2sms.com/dev/bulkV2"
+        headers = {
+            "authorization": FAST2SMS_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "route": "q",
+            "message": message,
+            "language": "english",
+            "flash": "0",
+            "numbers": phone_numbers
+        }
+
+        response = http_requests.post(url, json=payload, headers=headers, timeout=10)
+        result = response.json()
+
+        if result.get("return"):
+            print(f"[SMS] ✅ Emergency SMS sent to {len(volunteers)} volunteer(s): {phone_numbers}")
+        else:
+            print(f"[SMS] ❌ Failed: {result.get('message', 'Unknown error')}")
+
+    except Exception as e:
+        print(f"[SMS] ❌ Error sending SMS: {e}")
+
+
+# ──────────────────────────────────────────────
 # ROUTES — Public
 # ──────────────────────────────────────────────
 
@@ -177,6 +240,10 @@ def submit_request():
     )
     conn.commit()
     conn.close()
+
+    # Send SMS to all volunteers if this is an Emergency
+    if urgency == "Emergency":
+        send_emergency_sms(name, category, description, address, phone)
 
     # Redirect to success page with request details
     return render_template("success.html",
@@ -252,9 +319,15 @@ def volunteer_register():
         name = request.form.get("name", "").strip()
         phone = request.form.get("phone", "").strip()
         email = request.form.get("email", "").strip()
+        access_code = request.form.get("access_code", "").strip()
 
-        if not all([name, phone, email]):
+        if not all([name, phone, email, access_code]):
             flash("All fields are required.", "error")
+            return redirect(url_for("volunteer_register"))
+
+        # Verify access code
+        if access_code != ADMIN_ACCESS_CODE:
+            flash("Incorrect access code. Please contact your coordinator.", "error")
             return redirect(url_for("volunteer_register"))
 
         conn = get_db()
@@ -297,8 +370,15 @@ def volunteer_login():
     """Login for existing volunteers."""
     if request.method == "POST":
         email = request.form.get("email", "").strip()
-        if not email:
-            flash("Please enter your email.", "error")
+        access_code = request.form.get("access_code", "").strip()
+
+        if not email or not access_code:
+            flash("Please enter your email and access code.", "error")
+            return redirect(url_for("volunteer_login"))
+
+        # Verify access code
+        if access_code != ADMIN_ACCESS_CODE:
+            flash("Incorrect access code. Access denied.", "error")
             return redirect(url_for("volunteer_login"))
 
         conn = get_db()

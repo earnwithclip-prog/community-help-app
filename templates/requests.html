@@ -2,6 +2,50 @@
 {% block title %}All Requests — Volunteer View{% endblock %}
 
 {% block content %}
+
+<!-- iOS-style Emergency Alert Popup Modal -->
+{% if volunteer and emergency_alerts|length > 0 %}
+<div id="iosAlertOverlay" class="ios-alert-overlay">
+    <div class="ios-alert-container">
+        {% for alert in emergency_alerts %}
+        <div class="ios-alert-dialog slide-up" style="animation-delay: {{ loop.index0 * 0.15 }}s;"
+            data-alert-index="{{ loop.index0 }}">
+            <!-- Alert Icon -->
+            <div class="ios-alert-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <!-- Alert Title -->
+            <div class="ios-alert-title">🚨 Emergency Alert</div>
+            <!-- Alert Message -->
+            <div class="ios-alert-message">
+                <strong>{{ alert.name }}</strong> needs urgent help!<br>
+                <span class="ios-alert-category">{{ alert.category }}</span><br>
+                {{ alert.description[:120] }}{% if alert.description|length > 120 %}...{% endif %}
+            </div>
+            <!-- Alert Meta -->
+            <div class="ios-alert-meta">
+                <i class="bi bi-geo-alt me-1"></i>{{ alert.address[:40] }}{% if alert.address|length > 40 %}...{% endif
+                %}
+                <br>
+                <i class="bi bi-telephone me-1"></i>{{ alert.phone }}
+                <span class="mx-1">·</span>
+                <i class="bi bi-clock me-1"></i>{{ alert.created_at }}
+            </div>
+            <!-- Alert Actions (iOS-style) -->
+            <div class="ios-alert-actions">
+                <a href="tel:{{ alert.phone }}" class="ios-alert-btn ios-alert-btn-primary">
+                    <i class="bi bi-telephone-fill me-1"></i>Call Now
+                </a>
+                <button class="ios-alert-btn ios-alert-btn-default ios-alert-ok-btn" onclick="dismissSingleAlert(this)">
+                    OK
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <!-- Emergency Alert Banner for Volunteers -->
 {% if volunteer and emergency_alerts|length > 0 %}
 <div class="alert mb-4 slide-up"
@@ -183,4 +227,41 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if volunteer and emergency_alerts|length > 0 %}
+<script>
+    // Vibrate on mobile if supported
+    document.addEventListener('DOMContentLoaded', function () {
+        if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200, 100, 200]);
+        }
+    });
+
+    function dismissSingleAlert(btn) {
+        const dialog = btn.closest('.ios-alert-dialog');
+        dialog.style.transform = 'scale(0.8)';
+        dialog.style.opacity = '0';
+        setTimeout(function () {
+            dialog.style.display = 'none';
+            // Check if all alerts are dismissed
+            const remaining = document.querySelectorAll('.ios-alert-dialog');
+            let allHidden = true;
+            remaining.forEach(function (d) {
+                if (d.style.display !== 'none') allHidden = false;
+            });
+            if (allHidden) {
+                const overlay = document.getElementById('iosAlertOverlay');
+                overlay.style.opacity = '0';
+                setTimeout(function () {
+                    overlay.style.display = 'none';
+                    // Auto-dismiss on server
+                    fetch('{{ url_for("dismiss_alerts") }}', { method: 'POST' });
+                }, 300);
+            }
+        }, 250);
+    }
+</script>
+{% endif %}
 {% endblock %}
